@@ -111,7 +111,9 @@ function apiEliminarOrdenAdmin_(token, orden) {
 function apiReiniciarOrdenAdmin_(token, orden) {
   return apiRequest('reiniciarOrdenAdmin', { token, orden });
 }
-
+function apiActualizarCantidadesOrdenAdmin(token, orden, lineas) {
+  return apiRequest('actualizarCantidadesOrdenAdmin', { token, orden, lineas });
+}
 // ===== IMPORTACIÓN (nuevo: envía filas leídas con SheetJS) =====
 function apiPreviewPlantilla(token, rows) {
   return apiRequest('previewPlantilla', { token, rows });
