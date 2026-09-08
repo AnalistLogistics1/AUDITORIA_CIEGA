@@ -109,6 +109,7 @@ on_('btnDuplicateModeCancel', 'click', closeDuplicateOrdersModal_);
   });
   on_('btnConfirmModalCancel', 'click', closeConfirmModal_);
   on_('btnConfirmModalAccept', 'click', executeConfirmModalAction_);
+  on_('btnGuardarCantidades', 'click', handleGuardarCantidades_);
   on_('btnReiniciarOrden', 'click', handleReiniciarOrdenAdmin_);
   on_('btnAbrirSegundoConteo', 'click', handleAbrirSegundoConteo_);
   on_('btnAbrirTercerConteo', 'click', handleAbrirTercerConteo_);
@@ -549,6 +550,8 @@ function renderAdminOrderDetail_(res) {
     registros: registros
   };
 
+var isPendiente = header.estado === 'PENDIENTE';
+  toggleHidden_('btnGuardarCantidades', !isPendiente);
   toggleHidden_('btnAbrirSegundoConteo', !header.puedeAbrirConteo2);
   toggleHidden_('btnAbrirTercerConteo', !header.puedeAbrirConteo3);
 
@@ -562,9 +565,14 @@ function renderAdminOrderDetail_(res) {
   setText_('detailFechaFin', header.fechaFin || '');
   setText_('detailComentarioAdmin', header.comentarioAdmin || '');
 
-  var linesBody = document.getElementById('adminOrderLinesBody');
+var linesBody = document.getElementById('adminOrderLinesBody');
   if (linesBody) {
     linesBody.innerHTML = lines.length ? lines.map(function (r) {
+      // Renderizado condicional: input si es pendiente, texto si no lo es
+      var cantidadRender = isPendiente 
+        ? `<input type="number" class="inline-qty-input" data-codigo="${escAttr_(r.codigo || '')}" data-lote="${escAttr_(r.lote || '')}" value="${escAttr_(r.cantidad || 0)}" style="width: 80px; padding: 6px; border-radius: 8px; border: 1px solid #c6d2e1; text-align: center;">`
+        : esc_(r.cantidad || 0);
+
       return `
         <tr class="${rowStatusClass_(r.estadoLinea || '')}">
           <td>${esc_(r.codigo || '')}</td>
@@ -574,7 +582,7 @@ function renderAdminOrderDetail_(res) {
           <td>${esc_(r.inner || '')}</td>
           <td>${esc_(r.ean14 || '')}</td>
           <td>${esc_(r.descripcion || '')}</td>
-          <td>${esc_(r.cantidad || 0)}</td>
+          <td>${cantidadRender}</td>
           <td>${esc_(r.conteo1 == null ? '' : r.conteo1)}</td>
           <td>${esc_(r.conteo2 == null ? '' : r.conteo2)}</td>
           <td>${esc_(r.conteo3 == null ? '' : r.conteo3)}</td>
@@ -685,7 +693,44 @@ async function handleReiniciarOrdenAdmin_() {
     }
   );
 }
+async function handleGuardarCantidades_() {
+  if (!state.currentAdminOrder || !state.currentAdminOrder.header) return;
+  var orden = state.currentAdminOrder.header.orden;
 
+  // Recopilar todos los inputs de la tabla de detalle
+  var inputs = document.querySelectorAll('#adminOrderLinesBody .inline-qty-input');
+  if (!inputs.length) return;
+
+  var lineasActualizadas = [];
+  inputs.forEach(function(input) {
+    lineasActualizadas.push({
+      codigo: input.dataset.codigo,
+      lote: input.dataset.lote,
+      cantidad: input.value
+    });
+  });
+
+  showConfirmModal_(
+    '¿Confirma guardar los cambios de cantidad para la orden ' + orden + '?',
+    async function () {
+      try {
+        showAppModal_('Guardando cantidades...', true);
+        
+        await apiActualizarCantidadesOrdenAdmin(state.session.token, orden, lineasActualizadas);
+        
+        // Recargar el detalle de la orden para reflejar los cambios
+        var refreshed = await apiObtenerDetalleOrdenAdmin_(state.session.token, orden);
+        renderAdminOrderDetail_(refreshed);
+        
+        showAppModal_('Cantidades actualizadas correctamente.', false);
+        setTimeout(hideAppModal_, 1200);
+      } catch (err) {
+        hideAppModal_();
+        alert(err.message || 'Error actualizando cantidades.');
+      }
+    }
+  );
+}
 async function loadAuditorDashboard_() {
   if (!state.session) return;
 
