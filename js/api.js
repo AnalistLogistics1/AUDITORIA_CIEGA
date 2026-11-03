@@ -130,3 +130,11 @@ function apiDataRegistroVerificacion(token) {
 function apiReiniciarBD(token) {
   return apiRequest('reiniciarBD', { token });
 }
+
+function apiObtenerHuellas(token) {
+  return apiRequest('obtenerHuellas', { token });
+}
+
+function apiActualizarHuella(token, id_huella, valor) {
+  return apiRequest('actualizarHuella', { token, id_huella, valor });
+}
