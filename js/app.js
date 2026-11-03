@@ -420,9 +420,9 @@ async function loadAdminOrders_() {
       if (state.session && String(state.session.usuario).toUpperCase() === 'JCELISC') {
         huellaContainer.classList.remove('hidden');
         
-        // Cargar las 4 líneas de huellas desde almacenamiento local
-        setText_('huellaExportar', localStorage.getItem('huella_exportar') || 'Última exp.: N/A');
-        setText_('huellaReiniciar', localStorage.getItem('huella_reiniciar') || 'Último reinicio: N/A');
+// Cargar las 4 líneas de huellas desde almacenamiento local
+        setText_('huellaExportar', localStorage.getItem('huella_exportar') || 'Ultima Descarga: N/A');
+        setText_('huellaReiniciar', localStorage.getItem('huella_reiniciar') || 'Último reinicio BD: N/A');
         setText_('huellaOrdenReiniciada', localStorage.getItem('huella_orden_reiniciada') || 'Última orden reiniciada: N/A');
         setText_('huellaCarga', localStorage.getItem('huella_carga') || 'Última carga: N/A');
       } else {
@@ -1947,7 +1947,7 @@ function habilitarReinicioBD_() {
   
   // Guardar Huella de Exportación
   var now = formatFechaActual_();
-  var huellaExp = 'Última exp.: ' + state.session.nombre + ' - ' + now;
+  var huellaExp = 'Ultima Descarga: ' + state.session.nombre + ' - ' + now;
   localStorage.setItem('huella_exportar', huellaExp);
   setText_('huellaExportar', huellaExp);
 }
@@ -1975,9 +1975,9 @@ async function handleReiniciarBD_() {
         // Bloquear estado nuevamente tras reiniciar
         state.bdExportada = false;
         
-        // Guardar Huella de Reinicio
+// Guardar Huella de Reinicio
         var now = formatFechaActual_();
-        var huellaRei = 'Último reinicio: ' + state.session.nombre + ' - ' + now;
+        var huellaRei = 'Último reinicio BD: ' + state.session.nombre + ' - ' + now;
         localStorage.setItem('huella_reiniciar', huellaRei);
         setText_('huellaReiniciar', huellaRei);
         
