@@ -67,26 +67,33 @@
     </div>
   </div>
 
-<div id="adminEstadoFilters" class="status-filter-bar">
-  <button id="btnEstadoPendiente" class="estado-filter-btn estado-pendiente" type="button" data-estado="PENDIENTE">
-    <span class="estado-label">Pendiente</span>
-    <span id="countPendiente" class="estado-count">0</span>
-  </button>
+  <div id="adminEstadoFilters" class="status-filter-bar" style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 10px;">
+  <div style="display: flex; gap: 10px;">
+    <button id="btnEstadoPendiente" class="estado-filter-btn estado-pendiente" type="button" data-estado="PENDIENTE">
+      <span class="estado-label">Pendiente</span>
+      <span id="countPendiente" class="estado-count">0</span>
+    </button>
 
-  <button id="btnEstadoProgreso" class="estado-filter-btn estado-progreso" type="button" data-estado="EN PROGRESO">
-    <span class="estado-label">En Progreso</span>
-    <span id="countProgreso" class="estado-count">0</span>
-  </button>
+    <button id="btnEstadoProgreso" class="estado-filter-btn estado-progreso" type="button" data-estado="EN PROGRESO">
+      <span class="estado-label">En Progreso</span>
+      <span id="countProgreso" class="estado-count">0</span>
+    </button>
 
-  <button id="btnEstadoConforme" class="estado-filter-btn estado-conforme" type="button" data-estado="CONFORME">
-    <span class="estado-label">Conforme</span>
-    <span id="countConforme" class="estado-count">0</span>
-  </button>
+    <button id="btnEstadoConforme" class="estado-filter-btn estado-conforme" type="button" data-estado="CONFORME">
+      <span class="estado-label">Conforme</span>
+      <span id="countConforme" class="estado-count">0</span>
+    </button>
 
-  <button id="btnEstadoNoConforme" class="estado-filter-btn estado-noconforme" type="button" data-estado="NO CONFORME">
-    <span class="estado-label">No Conforme</span>
-    <span id="countNoConforme" class="estado-count">0</span>
-  </button>
+    <button id="btnEstadoNoConforme" class="estado-filter-btn estado-noconforme" type="button" data-estado="NO CONFORME">
+      <span class="estado-label">No Conforme</span>
+      <span id="countNoConforme" class="estado-count">0</span>
+    </button>
+  </div>
+
+  <div class="huella-procesos" style="font-size: 11px; text-align: right; color: #555; line-height: 1.4; font-weight: bold; padding-right: 10px;">
+    <div id="huellaExportar">Última exp.: N/A</div>
+    <div id="huellaReiniciar">Último reinicio: N/A</div>
+  </div>
 </div>
 
   <div class="card filters-card-pro">
@@ -144,7 +151,7 @@
   <span>Exportar</span>
 </button>
 
-<button id="btnReiniciarBD" class="btn btn-danger" type="button" disabled style="margin-left: 10px;">
+<button id="btnReiniciarBD" class="btn btn-danger" type="button" style="margin-left: 10px;">
   <span>REINICIAR BD</span>
 </button>
 
