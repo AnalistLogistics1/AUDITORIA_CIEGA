@@ -414,9 +414,21 @@ async function loadAdminOrders_() {
     applyAdminFilters_();
     setText_('adminTotalOrdenes', state.adminOrders.length + ' órdenes');
     
-    // Cargar huellas de procesos desde almacenamiento local
-    setText_('huellaExportar', localStorage.getItem('huella_exportar') || 'Última exp.: N/A');
-    setText_('huellaReiniciar', localStorage.getItem('huella_reiniciar') || 'Último reinicio: N/A');
+    // Control de visibilidad para "Huella de Procesos" (Solo JCELISC)
+    var huellaContainer = document.getElementById('huellaProcesosContainer');
+    if (huellaContainer) {
+      if (state.session && String(state.session.usuario).toUpperCase() === 'JCELISC') {
+        huellaContainer.classList.remove('hidden');
+        
+        // Cargar las 4 líneas de huellas desde almacenamiento local
+        setText_('huellaExportar', localStorage.getItem('huella_exportar') || 'Última exp.: N/A');
+        setText_('huellaReiniciar', localStorage.getItem('huella_reiniciar') || 'Último reinicio: N/A');
+        setText_('huellaOrdenReiniciada', localStorage.getItem('huella_orden_reiniciada') || 'Última orden reiniciada: N/A');
+        setText_('huellaCarga', localStorage.getItem('huella_carga') || 'Última carga: N/A');
+      } else {
+        huellaContainer.classList.add('hidden');
+      }
+    }
   } catch (err) {
     alert(err.message || 'Error cargando órdenes de administrador.');
   }
@@ -691,6 +703,13 @@ async function handleReiniciarOrdenAdmin_() {
         showAppModal_('Reiniciando...', true);
 
         await apiReiniciarOrdenAdmin_(state.session.token, orden);
+        
+        // Guardar Huella de Última Orden Reiniciada
+        var now = formatFechaActual_();
+        var huellaOrden = 'ORDEN : ' + orden + ' - ' + state.session.nombre + ' - ' + now;
+        localStorage.setItem('huella_orden_reiniciada', huellaOrden);
+        setText_('huellaOrdenReiniciada', huellaOrden);
+        
         await loadAdminOrders_();
 
         showAppModal_('Orden reiniciada correctamente.', false);
@@ -702,8 +721,7 @@ async function handleReiniciarOrdenAdmin_() {
 
       } catch (err) {
         hideAppModal_();
-        setMessage_('loginMessage', '', '');
-        alert(err.message || 'Error reiniciando la orden.');
+        showConfirmModal_(err.message || 'Error reiniciando la orden.', null, true);
       }
     }
   );
@@ -1270,6 +1288,12 @@ async function guardarPlantillaPendiente_() {
       state.pendingImportDuplicateMode || 'APPEND'
     );
 
+    // Guardar Huella de Última Carga
+    var now = formatFechaActual_();
+    var huellaCargaStr = 'Última carga: ' + state.session.nombre + ' - ' + now;
+    localStorage.setItem('huella_carga', huellaCargaStr);
+    setText_('huellaCarga', huellaCargaStr);
+
     hideAppModal_();
 
     setMessage_('uploadMessage',
@@ -1295,7 +1319,6 @@ async function guardarPlantillaPendiente_() {
     setMessage_('uploadMessage', err.message || 'Error importando plantilla.', 'error');
   }
 }
-
 
 function renderPreviewRows_() {
   var rows = state.pendingImportPreviewRows || [];
