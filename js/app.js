@@ -12,7 +12,8 @@ const state = {
   auditorEstadoFilter: '',
   pendingImportDuplicateMode: '',
   pendingImportDuplicateOrders: [],
-  pendingImportTotalRows: 0
+  pendingImportTotalRows: 0,
+  bdExportada: false
 
 };
 ;
@@ -360,9 +361,6 @@ function resetClientStateOnly_() {
   state.pendingImportDuplicateOrders = [];
   state.pendingImportTotalRows = 0;
   state.bdExportada = false;
-  
-  var btnReiniciar = document.getElementById('btnReiniciarBD');
-  if (btnReiniciar) btnReiniciar.disabled = true;
 
   setMessage_('uploadPreviewInfo', '');
 
@@ -415,9 +413,20 @@ async function loadAdminOrders_() {
     updateAdminEstadoButtons_();
     applyAdminFilters_();
     setText_('adminTotalOrdenes', state.adminOrders.length + ' órdenes');
+    
+    // Cargar huellas de procesos desde almacenamiento local
+    setText_('huellaExportar', localStorage.getItem('huella_exportar') || 'Última exp.: N/A');
+    setText_('huellaReiniciar', localStorage.getItem('huella_reiniciar') || 'Último reinicio: N/A');
   } catch (err) {
     alert(err.message || 'Error cargando órdenes de administrador.');
   }
+}
+
+// Función auxiliar para obtener fecha y hora actual
+function formatFechaActual_() {
+  var d = new Date();
+  var p = function(n) { return String(n).padStart(2, '0'); };
+  return p(d.getDate()) + '/' + p(d.getMonth() + 1) + '/' + d.getFullYear() + ' ' + p(d.getHours()) + ':' + p(d.getMinutes()) + ':' + p(d.getSeconds());
 }
 
 function applyAdminFilters_() {
@@ -1896,10 +1905,12 @@ var nombre = 'Registro_Verificacion_' +
 
 function habilitarReinicioBD_() {
   state.bdExportada = true;
-  var btn = document.getElementById('btnReiniciarBD');
-  if (btn && state.session && state.session.rol === 'ADMIN') {
-    btn.disabled = false;
-  }
+  
+  // Guardar Huella de Exportación
+  var now = formatFechaActual_();
+  var huellaExp = 'Última exp.: ' + state.session.nombre + ' - ' + now;
+  localStorage.setItem('huella_exportar', huellaExp);
+  setText_('huellaExportar', huellaExp);
 }
 
 async function handleReiniciarBD_() {
@@ -1907,11 +1918,14 @@ async function handleReiniciarBD_() {
     alert('Acceso denegado. Solo administradores pueden reiniciar la BD.');
     return;
   }
+  
+  // Validación de seguridad inicial (Alerta bloqueante si no exportó)
   if (!state.bdExportada) {
-    alert('Debe exportar la información antes de reiniciar la base de datos.');
+    alert('DEBE DESCARGAR PREVIAMENTE O EJECUTAR EL BOTON "EXPORTAR" ANTES DE REINICIAR LA BD.');
     return;
   }
 
+  // Si ya exportó, lanza la ventana emergente modal nativa del sistema
   showConfirmModal_(
     '¿Está seguro de REINICIAR TODA LA BASE DE DATOS? Esta acción es irreversible.',
     async function () {
@@ -1919,10 +1933,14 @@ async function handleReiniciarBD_() {
         showAppModal_('Reiniciando Base de Datos...', true);
         await apiReiniciarBD(state.session.token);
         
-        // Bloquear nuevamente después de limpiar
+        // Bloquear estado nuevamente tras reiniciar
         state.bdExportada = false;
-        var btn = document.getElementById('btnReiniciarBD');
-        if (btn) btn.disabled = true;
+        
+        // Guardar Huella de Reinicio
+        var now = formatFechaActual_();
+        var huellaRei = 'Último reinicio: ' + state.session.nombre + ' - ' + now;
+        localStorage.setItem('huella_reiniciar', huellaRei);
+        setText_('huellaReiniciar', huellaRei);
         
         await loadAdminOrders_();
         showAppModal_('Base de datos reiniciada correctamente.', false);
