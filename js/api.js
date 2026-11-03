@@ -126,3 +126,7 @@ function apiImportarPlantilla(token, rows, duplicateMode) {
 function apiDataRegistroVerificacion(token) {
   return apiRequest('dataRegistroVerificacion', { token });
 }
+
+function apiReiniciarBD(token) {
+  return apiRequest('reiniciarBD', { token });
+}
