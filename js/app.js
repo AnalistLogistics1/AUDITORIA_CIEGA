@@ -706,7 +706,7 @@ async function handleReiniciarOrdenAdmin_() {
         
         // Guardar Huella de Última Orden Reiniciada
         var now = formatFechaActual_();
-        var huellaOrden = 'ORDEN : ' + orden + ' - ' + state.session.nombre + ' - ' + now;
+        var huellaOrden = 'Última orden reiniciada: ORDEN : ' + orden + ' - ' + state.session.nombre + ' - ' + now;
         localStorage.setItem('huella_orden_reiniciada', huellaOrden);
         setText_('huellaOrdenReiniciada', huellaOrden);
         
