@@ -118,6 +118,7 @@ on_('btnDuplicateModeCancel', 'click', closeDuplicateOrdersModal_);
     showView_('view-admin-upload');
   });
   on_('btnDescargarRegistroVerificacion', 'click', handleDescargarRegistroVerificacion_);
+  on_('btnReiniciarBD', 'click', handleReiniciarBD_);
 
   on_('btnBackFromUpload', 'click', function () {
     showView_('view-admin-dashboard');
@@ -358,6 +359,11 @@ function resetClientStateOnly_() {
   state.pendingImportDuplicateMode = '';
   state.pendingImportDuplicateOrders = [];
   state.pendingImportTotalRows = 0;
+  state.bdExportada = false;
+  
+  var btnReiniciar = document.getElementById('btnReiniciarBD');
+  if (btnReiniciar) btnReiniciar.disabled = true;
+
   setMessage_('uploadPreviewInfo', '');
 
   clearHTML_('adminOrdersBody');
@@ -1873,13 +1879,14 @@ async function handleDescargarRegistroVerificacion_() {
     // ===== Nombre del archivo con fecha/hora =====
     var ahora = new Date();
     var p = function (n) { return String(n).padStart(2, '0'); };
-    var nombre = 'Registro_Verificacion_' +
+var nombre = 'Registro_Verificacion_' +
       ahora.getFullYear() + p(ahora.getMonth() + 1) + p(ahora.getDate()) + '_' +
       p(ahora.getHours()) + p(ahora.getMinutes()) + p(ahora.getSeconds()) + '.xlsx';
 
     XLSX.writeFile(wb, nombre);
 
     hideAppModal_();
+    habilitarReinicioBD_();
 
   } catch (err) {
     hideAppModal_();
@@ -1887,6 +1894,46 @@ async function handleDescargarRegistroVerificacion_() {
   }
 }
 
+function habilitarReinicioBD_() {
+  state.bdExportada = true;
+  var btn = document.getElementById('btnReiniciarBD');
+  if (btn && state.session && state.session.rol === 'ADMIN') {
+    btn.disabled = false;
+  }
+}
+
+async function handleReiniciarBD_() {
+  if (!state.session || state.session.rol !== 'ADMIN') {
+    alert('Acceso denegado. Solo administradores pueden reiniciar la BD.');
+    return;
+  }
+  if (!state.bdExportada) {
+    alert('Debe exportar la información antes de reiniciar la base de datos.');
+    return;
+  }
+
+  showConfirmModal_(
+    '¿Está seguro de REINICIAR TODA LA BASE DE DATOS? Esta acción es irreversible.',
+    async function () {
+      try {
+        showAppModal_('Reiniciando Base de Datos...', true);
+        await apiReiniciarBD(state.session.token);
+        
+        // Bloquear nuevamente después de limpiar
+        state.bdExportada = false;
+        var btn = document.getElementById('btnReiniciarBD');
+        if (btn) btn.disabled = true;
+        
+        await loadAdminOrders_();
+        showAppModal_('Base de datos reiniciada correctamente.', false);
+        setTimeout(hideAppModal_, 1200);
+      } catch (err) {
+        hideAppModal_();
+        alert(err.message || 'Error reiniciando la base de datos.');
+      }
+    }
+  );
+}
 
 async function handleAdminRefresh_() {
   try {
