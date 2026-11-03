@@ -1483,14 +1483,30 @@ function hideAppModal_() {
     modal.classList.add('hidden');
   }
 }
-function showConfirmModal_(message, actionFn) {
+function showConfirmModal_(message, actionFn, isAlertOnly) {
   var modal = document.getElementById('confirmModal');
   var msg = document.getElementById('confirmModalMessage');
+  var btnAccept = document.getElementById('btnConfirmModalAccept');
+  var btnCancel = document.getElementById('btnConfirmModalCancel');
 
-  if (!modal || !msg) return;
+  if (!modal || !msg || !btnAccept || !btnCancel) return;
 
   msg.textContent = message || '¿Confirma la acción?';
-  state.confirmAction = actionFn || null;
+  
+  if (isAlertOnly) {
+    // Modo Alerta: Solo muestra botón de Aceptar (para cerrar)
+    btnAccept.textContent = 'Aceptar';
+    btnAccept.className = 'btn btn-primary'; // Azul
+    btnCancel.classList.add('hidden');
+    state.confirmAction = null; // Cierra el modal sin hacer nada
+  } else {
+    // Modo Confirmación: Muestra ambos botones
+    btnAccept.textContent = 'Aceptar';
+    btnAccept.className = 'btn btn-danger'; // Rojo
+    btnCancel.classList.remove('hidden');
+    state.confirmAction = actionFn || null;
+  }
+
   modal.classList.remove('hidden');
 }
 
@@ -1892,14 +1908,14 @@ var nombre = 'Registro_Verificacion_' +
       ahora.getFullYear() + p(ahora.getMonth() + 1) + p(ahora.getDate()) + '_' +
       p(ahora.getHours()) + p(ahora.getMinutes()) + p(ahora.getSeconds()) + '.xlsx';
 
-    XLSX.writeFile(wb, nombre);
+XLSX.writeFile(wb, nombre);
 
     hideAppModal_();
     habilitarReinicioBD_();
 
   } catch (err) {
     hideAppModal_();
-    alert(err.message || 'Error generando el archivo.');
+    showConfirmModal_(err.message || 'Error generando el archivo.', null, true);
   }
 }
 
@@ -1915,17 +1931,17 @@ function habilitarReinicioBD_() {
 
 async function handleReiniciarBD_() {
   if (!state.session || state.session.rol !== 'ADMIN') {
-    alert('Acceso denegado. Solo administradores pueden reiniciar la BD.');
+    showConfirmModal_('Acceso denegado. Solo administradores pueden reiniciar la BD.', null, true);
     return;
   }
   
-  // Validación de seguridad inicial (Alerta bloqueante si no exportó)
+  // Validación de seguridad inicial: Mostrar modal de alerta si no exportó
   if (!state.bdExportada) {
-    alert('DEBE DESCARGAR PREVIAMENTE O EJECUTAR EL BOTON "EXPORTAR" ANTES DE REINICIAR LA BD.');
+    showConfirmModal_('DEBE DESCARGAR PREVIAMENTE O EJECUTAR EL BOTON "EXPORTAR" ANTES DE REINICIAR LA BD.', null, true);
     return;
   }
 
-  // Si ya exportó, lanza la ventana emergente modal nativa del sistema
+  // Si ya exportó, lanza la ventana emergente modal de confirmación
   showConfirmModal_(
     '¿Está seguro de REINICIAR TODA LA BASE DE DATOS? Esta acción es irreversible.',
     async function () {
